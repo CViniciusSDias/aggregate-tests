@@ -1,0 +1,12 @@
+{
+    "require": {
+        "php": ">=7.3",
+        "ext-pdo": "*",
+        "doctrine/orm": "^2.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "CViniciusSDias\\Aggregate\\": "src/"
+        }
+    }
+}
