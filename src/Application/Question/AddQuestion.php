@@ -3,30 +3,30 @@
 namespace CViniciusSDias\Aggregate\Application\Question;
 
 use CViniciusSDias\Aggregate\Domain\Answer\AnswerId;
-use CViniciusSDias\Aggregate\Domain\Question\Question;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
 
 class AddQuestion
 {
     private QuestionRepository $questionRepository;
+    private QuestionFactory $questionFactory;
 
-    public function __construct(QuestionRepository $questionRepository)
+    public function __construct(QuestionRepository $questionRepository, QuestionFactory $questionFactory)
     {
         $this->questionRepository = $questionRepository;
+        $this->questionFactory = $questionFactory;
     }
 
-    public function execute(AddQuestionCommand $command)
+    public function execute(AddQuestionCommand $command): QuestionDTO
     {
-        $className = 'CViniciusSDias\\Aggregate\\Domain\\Question\\';
-        $className .= str_replace(' ', '', ucwords(str_replace('_', ' ', $command->questionType())));
-        /** @var Question $question */
-        $question = new $className(new QuestionId(), $command->prompt(), $command->required());
-
+        $question = $this->questionFactory
+            ->createQuestion($command->questionType(), new QuestionId(), $command->prompt(), $command->required());
         foreach ($command->answerCommands() as $answer) {
             $question->addAnswer(new AnswerId(), $answer->prompt());
         }
 
         $this->questionRepository->save($question);
+
+        return new QuestionDTO($question);
     }
 }

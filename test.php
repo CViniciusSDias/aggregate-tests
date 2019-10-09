@@ -3,8 +3,10 @@
 use CViniciusSDias\Aggregate\Application\Answer\AddAnswerCommand;
 use CViniciusSDias\Aggregate\Application\Question\AddQuestion;
 use CViniciusSDias\Aggregate\Application\Question\AddQuestionCommand;
+use CViniciusSDias\Aggregate\Application\Question\QuestionFactory;
 use CViniciusSDias\Aggregate\Domain\Answer\Answer;
 use CViniciusSDias\Aggregate\Domain\Question\Question;
+use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
 use CViniciusSDias\Aggregate\Infrastructure\Persistence\Doctrine\EntityManagerFactory;
 use CViniciusSDias\Aggregate\Infrastructure\Question\PdoQuestionRepository;
@@ -27,7 +29,7 @@ function getRepository(bool $useDoctrine = false): QuestionRepository
             );
         ');
 
-        return new PdoQuestionRepository($pdo);
+        return new PdoQuestionRepository($pdo, new QuestionFactory());
     }
 
     $entityManager = (new EntityManagerFactory())->createEntityManager([
@@ -46,7 +48,7 @@ function getRepository(bool $useDoctrine = false): QuestionRepository
 
 $repository = getRepository(true);
 
-$addQuestion = new AddQuestion($repository);
+$addQuestion = new AddQuestion($repository, new QuestionFactory());
 
 $firstQuestionAddAnswerCommandList = [
     new AddAnswerCommand('First answer of first question'),
@@ -54,7 +56,7 @@ $firstQuestionAddAnswerCommandList = [
     new AddAnswerCommand('Third answer of first question'),
 ];
 $addQuestionCommand = new AddQuestionCommand('select_one', 'Question 1 - Select One', true, $firstQuestionAddAnswerCommandList);
-$addQuestion->execute($addQuestionCommand);
+$firstQuestionDTO = $addQuestion->execute($addQuestionCommand);
 
 $secondQuestionAddAnswerCommandList = [
     new AddAnswerCommand('First answer of second question'),
@@ -62,5 +64,30 @@ $secondQuestionAddAnswerCommandList = [
     new AddAnswerCommand('Third answer of second question'),
 ];
 $addQuestionCommand = new AddQuestionCommand('select_multiple', 'Question 2 - Select Multiple', false, $secondQuestionAddAnswerCommandList);
-$addQuestion->execute($addQuestionCommand);
+$secondQuestionDTO = $addQuestion->execute($addQuestionCommand);
 
+/* // test code
+$firstQuestionId = new QuestionId($firstQuestionDTO->questionId());
+$foundQuestion = $repository->ofId($firstQuestionId);
+var_dump(
+    $foundQuestion->prompt(),
+    $foundQuestion->id()->id(),
+    $foundQuestion->answers()->map(function (Answer $answer) {
+        return $answer->prompt();
+    })
+);
+
+$answer = $foundQuestion->answers()->first();
+$foundQuestion->removeAnswerOfId($answer->id());
+
+$repository->save($foundQuestion);
+
+$foundQuestion = $repository->ofId($firstQuestionId);
+var_dump(
+    $foundQuestion->prompt(),
+    $foundQuestion->id()->id(),
+    $foundQuestion->answers()->map(function (Answer $answer) {
+        return $answer->prompt();
+    })
+);
+*/

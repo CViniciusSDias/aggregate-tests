@@ -2,24 +2,49 @@
 
 namespace CViniciusSDias\Aggregate\Infrastructure\Question;
 
+use CViniciusSDias\Aggregate\Application\Question\QuestionFactory;
 use CViniciusSDias\Aggregate\Domain\Answer\Answer;
+use CViniciusSDias\Aggregate\Domain\Answer\AnswerId;
 use CViniciusSDias\Aggregate\Domain\Question\Question;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
+use Doctrine\Common\Collections\Collection;
 use PDO;
 
 class PdoQuestionRepository implements QuestionRepository
 {
     private PDO $pdo;
+    private \SplObjectStorage $fetchedAnswers;
+    private QuestionFactory $questionFactory;
 
-    public function __construct(PDO $pdo)
+    public function __construct(PDO $pdo, QuestionFactory $questionFactory)
     {
         $this->pdo = $pdo;
+        $this->questionFactory = $questionFactory;
     }
 
-    public function ofId(QuestionId $id): Question
+    public function ofId(QuestionId $questionId): Question
     {
-        return new class extends Question {};
+        $stm = $this->pdo->prepare('SELECT * FROM question WHERE id = ?');
+        $stm->bindValue(1, $questionId->id());
+        $stm->execute();
+
+        $row = $stm->fetch(\PDO::FETCH_ASSOC);
+        $question = $this->questionFactory
+            ->createQuestion($row['question_type'], new QuestionId($row['id']), $row['prompt'], $row['required']);
+
+        $stm = $this->pdo->prepare('SELECT * FROM answer WHERE question_id = ?');
+        $stm->bindValue(1, $questionId->id());
+        $stm->execute();
+
+        $answerDataList = $stm->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($answerDataList as $answerData) {
+            $question->addAnswer(new AnswerId($answerData['id']), $answerData['prompt']);
+        }
+        $this->fetchedAnswers->attach($questionId, $question->answers());
+
+        return $question;
     }
 
     public function save(Question $question): Question
@@ -49,6 +74,8 @@ class PdoQuestionRepository implements QuestionRepository
         $stm->execute();
 
         $this->insertAnswers($question);
+        $this->fetchedAnswers->attach($question->id(), $question->answers());
+
         return $question;
     }
 
@@ -77,11 +104,8 @@ class PdoQuestionRepository implements QuestionRepository
 
     private function removeDeletedAnswers(Question $question): void
     {
-        $stm = $this->pdo->prepare('SELECT id FROM answer WHERE question_id = ?');
-        $stm->bindValue(1, $question->id());
-        $stm->execute();
+        $answerIds = $this->fetchedAnswers[$question->id()]->toArray();
 
-        $answerIds = $stm->fetchAll(PDO::FETCH_COLUMN);
         $validAnswersIds = $question->answers()
             ->map(function (Answer $answer) {
                 return $answer->id();
