@@ -4,7 +4,7 @@ namespace CViniciusSDias\Aggregate\Domain;
 
 abstract class Id
 {
-    private $id;
+    private string $id;
 
     public function __construct(string $id = null)
     {

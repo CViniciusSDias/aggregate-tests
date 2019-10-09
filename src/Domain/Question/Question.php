@@ -9,15 +9,16 @@ use Doctrine\Common\Collections\Collection;
 
 class Question
 {
-    private $id;
-    private $prompt;
-    /** @var Collection<Answer> */
-    private $answers;
+    private QuestionId $id;
+    private string $prompt;
+    private Collection $answers;
+    private bool $required;
 
-    public function __construct(QuestionId $id, string $prompt)
+    public function __construct(QuestionId $id, string $prompt, bool $required = false)
     {
         $this->id = $id;
         $this->prompt = $prompt;
+        $this->required = $required;
         $this->answers = new ArrayCollection();
     }
 
@@ -32,7 +33,7 @@ class Question
             throw new \DomainException('Maximum of 5 answers exceded');
         }
 
-        $this->answers[] = new Answer($id, $answerPrompt, $this);
+        $this->answers->add(new Answer($id, $answerPrompt, $this));
         return $this;
     }
 
@@ -53,5 +54,10 @@ class Question
                 $this->answers->remove($i);
             }
         }
+    }
+
+    public function isRequired(): bool
+    {
+        return $this->required;
     }
 }

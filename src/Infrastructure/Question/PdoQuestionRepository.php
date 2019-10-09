@@ -11,7 +11,7 @@ use PDO;
 
 class PdoQuestionRepository implements QuestionRepository
 {
-    private $pdo;
+    private PDO $pdo;
 
     public function __construct(PDO $pdo)
     {

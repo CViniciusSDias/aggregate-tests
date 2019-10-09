@@ -6,9 +6,9 @@ use CViniciusSDias\Aggregate\Domain\Question\Question;
 
 class Answer
 {
-    private $id;
-    private $prompt;
-    private $question;
+    private AnswerId $id;
+    private string $prompt;
+    private Question $question;
 
     public function __construct(AnswerId $id, string $prompt, Question $question)
     {
