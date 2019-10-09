@@ -9,6 +9,7 @@ use CViniciusSDias\Aggregate\Domain\Question\Question;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
 use CViniciusSDias\Aggregate\Infrastructure\Persistence\Doctrine\EntityManagerFactory;
+use CViniciusSDias\Aggregate\Infrastructure\Question\InMemoryQuestionRepository;
 use CViniciusSDias\Aggregate\Infrastructure\Question\PdoQuestionRepository;
 use Doctrine\ORM\Tools\SchemaTool;
 
@@ -46,7 +47,7 @@ function getRepository(bool $useDoctrine = false): QuestionRepository
     return $questionRepository;
 }
 
-$repository = getRepository(true);
+$repository = new InMemoryQuestionRepository(); // getRepository(true);
 
 $addQuestion = new AddQuestion($repository, new QuestionFactory());
 
