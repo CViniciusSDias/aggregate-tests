@@ -1,9 +1,10 @@
 <?php
 
+use CViniciusSDias\Aggregate\Application\Answer\AddAnswerCommand;
+use CViniciusSDias\Aggregate\Application\Question\AddQuestion;
+use CViniciusSDias\Aggregate\Application\Question\AddQuestionCommand;
 use CViniciusSDias\Aggregate\Domain\Answer\Answer;
-use CViniciusSDias\Aggregate\Domain\Answer\AnswerId;
 use CViniciusSDias\Aggregate\Domain\Question\Question;
-use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
 use CViniciusSDias\Aggregate\Infrastructure\Persistence\Doctrine\EntityManagerFactory;
 use CViniciusSDias\Aggregate\Infrastructure\Question\PdoQuestionRepository;
@@ -13,60 +14,53 @@ require_once 'vendor/autoload.php';
 
 function getRepository(bool $useDoctrine = false): QuestionRepository
 {
+    $dbPath = ':memory:';
     if (!$useDoctrine) {
-        $pdo = new PDO('sqlite::memory:');
-        $pdo->exec('CREATE TABLE question (id TEXT PRIMARY KEY, prompt TEXT);');
-        $pdo->exec('CREATE TABLE answer (id TEXT PRIMARY KEY, prompt TEXT, question_id INTEGER, FOREIGN KEY (question_id) REFERENCES question(id));');
+        $pdo = new PDO("sqlite:$dbPath");
+        $pdo->exec('CREATE TABLE question (id TEXT PRIMARY KEY, prompt TEXT, required INTEGER);');
+        $pdo->exec('
+            CREATE TABLE answer (
+                id TEXT PRIMARY KEY,
+                prompt TEXT,
+                question_id INTEGER,
+                FOREIGN KEY (question_id) REFERENCES question(id)
+            );
+        ');
 
         return new PdoQuestionRepository($pdo);
     }
 
     $entityManager = (new EntityManagerFactory())->createEntityManager([
         'driver' => 'pdo_sqlite',
-        'path' => ':memory:',
+        'path' => $dbPath,
     ]);
     $schemaTool = new SchemaTool($entityManager);
     $schemaTool->createSchema([
         $entityManager->getClassMetadata(Question::class),
         $entityManager->getClassMetadata(Answer::class),
     ]);
-    return $entityManager->getRepository(Question::class);
+    /** @var QuestionRepository $questionRepository */
+    $questionRepository = $entityManager->getRepository(Question::class);
+    return $questionRepository;
 }
 
 $repository = getRepository(true);
 
-$firstQuestionId = new QuestionId();
-$aQuestion = new Question($firstQuestionId, 'Question 1');
+$addQuestion = new AddQuestion($repository);
 
-$aQuestion->addAnswer(new AnswerId(), 'First answer')
-    ->addAnswer(new AnswerId(), 'Second answer');
+$firstQuestionAddAnswerCommandList = [
+    new AddAnswerCommand('First answer of first question'),
+    new AddAnswerCommand('Second answer of first question'),
+    new AddAnswerCommand('Third answer of first question'),
+];
+$addQuestionCommand = new AddQuestionCommand('select_one', 'Question 1 - Select One', true, $firstQuestionAddAnswerCommandList);
+$addQuestion->execute($addQuestionCommand);
 
+$secondQuestionAddAnswerCommandList = [
+    new AddAnswerCommand('First answer of second question'),
+    new AddAnswerCommand('Second answer of second question'),
+    new AddAnswerCommand('Third answer of second question'),
+];
+$addQuestionCommand = new AddQuestionCommand('select_multiple', 'Question 2 - Select Multiple', false, $secondQuestionAddAnswerCommandList);
+$addQuestion->execute($addQuestionCommand);
 
-$secondQuestionId = new QuestionId();
-$anotherQuestion = new Question($secondQuestionId, 'Question 2');
-
-$answerIdToRemove = new AnswerId();
-$anotherQuestion->addAnswer($answerIdToRemove, 'Another answer')
-    ->addAnswer(new AnswerId(), 'Yet another answer')
-    ->addAnswer(new AnswerId(), 'One more answer');
-
-$repository->save($aQuestion);
-$repository->save($anotherQuestion);
-
-$foundQuestion = $repository->ofId($firstQuestionId);
-var_dump(
-    $foundQuestion->prompt(),
-    $foundQuestion->id()->id(),
-    $foundQuestion->answers()->map(function (Answer $answer) { return $answer->prompt(); })
-);
-
-$anotherQuestion->removeAnswerOfId($answerIdToRemove);
-
-$repository->save($anotherQuestion);
-
-$foundQuestion = $repository->ofId($secondQuestionId);
-var_dump(
-    $foundQuestion->prompt(),
-    $foundQuestion->id()->id(),
-    $foundQuestion->answers()->map(function (Answer $answer) { return $answer->prompt(); })
-);

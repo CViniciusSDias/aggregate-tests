@@ -7,7 +7,7 @@ use CViniciusSDias\Aggregate\Domain\Answer\AnswerId;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
-class Question
+abstract class Question
 {
     private QuestionId $id;
     private string $prompt;
@@ -40,6 +40,13 @@ class Question
     public function answers(): Collection
     {
         return $this->answers;
+    }
+
+    protected function answerOfId(AnswerId $answerId): Answer
+    {
+        return $selectedAnswer = $this->answers()
+            ->filter(fn (Answer $answer) => $answer->id() == $answerId)
+            ->first();
     }
 
     public function prompt(): string

@@ -3,7 +3,6 @@
 namespace CViniciusSDias\Aggregate\Infrastructure\Question;
 
 use CViniciusSDias\Aggregate\Domain\Answer\Answer;
-use CViniciusSDias\Aggregate\Domain\Answer\AnswerId;
 use CViniciusSDias\Aggregate\Domain\Question\Question;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
@@ -20,22 +19,7 @@ class PdoQuestionRepository implements QuestionRepository
 
     public function ofId(QuestionId $id): Question
     {
-        $stm = $this->pdo->prepare('SELECT * FROM question WHERE id = ?');
-        $stm->bindValue(1, $id);
-        $stm->execute();
-        $row = $stm->fetch(PDO::FETCH_ASSOC);
-
-        $question = new Question(new QuestionId($row['id']), $row['prompt']);
-
-        $stm = $this->pdo->prepare('SELECT * FROM answer WHERE question_id = ?');
-        $stm->bindValue(1, $id);
-        $stm->execute();
-
-        foreach ($stm->fetchAll(PDO::FETCH_ASSOC) as $answer) {
-            $question->addAnswer(new AnswerId($answer['id']), $answer['prompt']);
-        }
-
-        return $question;
+        return new class extends Question {};
     }
 
     public function save(Question $question): Question
@@ -58,9 +42,10 @@ class PdoQuestionRepository implements QuestionRepository
 
     private function insertQuestion(Question $question): Question
     {
-        $stm = $this->pdo->prepare('INSERT INTO question VALUES (?, ?);');
+        $stm = $this->pdo->prepare('INSERT INTO question VALUES (?, ?, ?);');
         $stm->bindValue(1, $question->id());
         $stm->bindValue(2, $question->prompt());
+        $stm->bindValue(3, $question->isRequired(), \PDO::PARAM_BOOL);
         $stm->execute();
 
         $this->insertAnswers($question);
