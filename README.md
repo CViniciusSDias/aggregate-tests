@@ -1,6 +1,6 @@
 # DDD Aggregate tests
 
-This repository has as its porpuse test an implementation of a DDD Aggregate.
+This repository porpuse is to test an implementation of a DDD Aggregate.
 
 ## Domain
 
