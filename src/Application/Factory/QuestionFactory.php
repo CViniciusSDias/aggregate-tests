@@ -1,6 +1,6 @@
 <?php
 
-namespace CViniciusSDias\Aggregate\Application\Question;
+namespace CViniciusSDias\Aggregate\Application\Factory;
 
 use CViniciusSDias\Aggregate\Domain\Question\Question;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionId;

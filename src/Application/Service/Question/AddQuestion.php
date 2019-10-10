@@ -1,7 +1,9 @@
 <?php
 
-namespace CViniciusSDias\Aggregate\Application\Question;
+namespace CViniciusSDias\Aggregate\Application\Service\Question;
 
+use CViniciusSDias\Aggregate\Application\DTO\Question\QuestionDTO;
+use CViniciusSDias\Aggregate\Application\Factory\QuestionFactory;
 use CViniciusSDias\Aggregate\Domain\Answer\AnswerId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;

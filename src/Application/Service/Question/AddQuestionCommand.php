@@ -1,8 +1,8 @@
 <?php
 
-namespace CViniciusSDias\Aggregate\Application\Question;
+namespace CViniciusSDias\Aggregate\Application\Service\Question;
 
-use CViniciusSDias\Aggregate\Application\Answer\AddAnswerCommand;
+use CViniciusSDias\Aggregate\Application\Service\Answer\AddAnswerCommand;
 
 class AddQuestionCommand
 {

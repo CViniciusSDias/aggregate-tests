@@ -8,5 +8,8 @@
         "psr-4": {
             "CViniciusSDias\\Aggregate\\": "src/"
         }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^0.11.16"
     }
 }

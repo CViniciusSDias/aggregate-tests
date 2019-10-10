@@ -1,6 +1,6 @@
 <?php
 
-namespace CViniciusSDias\Aggregate\Application\Answer;
+namespace CViniciusSDias\Aggregate\Application\Service\Answer;
 
 class AddAnswerCommand
 {

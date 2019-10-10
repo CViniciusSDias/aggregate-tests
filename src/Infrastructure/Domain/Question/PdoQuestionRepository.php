@@ -1,26 +1,33 @@
 <?php
 
-namespace CViniciusSDias\Aggregate\Infrastructure\Question;
+namespace CViniciusSDias\Aggregate\Infrastructure\Domain\Question;
 
-use CViniciusSDias\Aggregate\Application\Question\QuestionFactory;
+use CViniciusSDias\Aggregate\Application\Factory\QuestionFactory;
 use CViniciusSDias\Aggregate\Domain\Answer\Answer;
 use CViniciusSDias\Aggregate\Domain\Answer\AnswerId;
 use CViniciusSDias\Aggregate\Domain\Question\Question;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
-use Doctrine\Common\Collections\Collection;
+use CViniciusSDias\Aggregate\Domain\Question\SelectMultiple;
+use CViniciusSDias\Aggregate\Domain\Question\SelectOne;
 use PDO;
+use SplObjectStorage;
 
 class PdoQuestionRepository implements QuestionRepository
 {
     private PDO $pdo;
-    private \SplObjectStorage $fetchedAnswers;
+    private SplObjectStorage $fetchedAnswers;
     private QuestionFactory $questionFactory;
+    private const QUESTION_TYPES = [
+        SelectOne::class => 1,
+        SelectMultiple::class => 2,
+    ];
 
     public function __construct(PDO $pdo, QuestionFactory $questionFactory)
     {
         $this->pdo = $pdo;
         $this->questionFactory = $questionFactory;
+        $this->fetchedAnswers = new SplObjectStorage();
     }
 
     public function ofId(QuestionId $questionId): Question
@@ -29,7 +36,7 @@ class PdoQuestionRepository implements QuestionRepository
         $stm->bindValue(1, $questionId->id());
         $stm->execute();
 
-        $row = $stm->fetch(\PDO::FETCH_ASSOC);
+        $row = $stm->fetch(PDO::FETCH_ASSOC);
         $question = $this->questionFactory
             ->createQuestion($row['question_type'], new QuestionId($row['id']), $row['prompt'], $row['required']);
 
@@ -37,7 +44,7 @@ class PdoQuestionRepository implements QuestionRepository
         $stm->bindValue(1, $questionId->id());
         $stm->execute();
 
-        $answerDataList = $stm->fetchAll(\PDO::FETCH_ASSOC);
+        $answerDataList = $stm->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($answerDataList as $answerData) {
             $question->addAnswer(new AnswerId($answerData['id']), $answerData['prompt']);
@@ -67,10 +74,11 @@ class PdoQuestionRepository implements QuestionRepository
 
     private function insertQuestion(Question $question): Question
     {
-        $stm = $this->pdo->prepare('INSERT INTO question VALUES (?, ?, ?);');
+        $stm = $this->pdo->prepare('INSERT INTO question VALUES (?, ?, ?, ?);');
         $stm->bindValue(1, $question->id());
         $stm->bindValue(2, $question->prompt());
-        $stm->bindValue(3, $question->isRequired(), \PDO::PARAM_BOOL);
+        $stm->bindValue(3, $question->isRequired(), PDO::PARAM_BOOL);
+        $stm->bindValue(4, PdoQuestionRepository::QUESTION_TYPES[get_class($question)], PDO::PARAM_INT);
         $stm->execute();
 
         $this->insertAnswers($question);

@@ -1,28 +1,33 @@
 <?php
 
-use CViniciusSDias\Aggregate\Application\Answer\AddAnswerCommand;
-use CViniciusSDias\Aggregate\Application\Question\AddQuestion;
-use CViniciusSDias\Aggregate\Application\Question\AddQuestionCommand;
-use CViniciusSDias\Aggregate\Application\Question\QuestionFactory;
+use CViniciusSDias\Aggregate\Application\Factory\QuestionFactory;
+use CViniciusSDias\Aggregate\Application\Persistence\TransactionalSession;
+use CViniciusSDias\Aggregate\Application\Service\Answer\AddAnswerCommand;
+use CViniciusSDias\Aggregate\Application\Service\Question\AddQuestion;
+use CViniciusSDias\Aggregate\Application\Service\Question\AddQuestionCommand;
+use CViniciusSDias\Aggregate\Application\Service\TransactionalApplicationService;
 use CViniciusSDias\Aggregate\Domain\Answer\Answer;
 use CViniciusSDias\Aggregate\Domain\Question\Question;
-use CViniciusSDias\Aggregate\Domain\Question\QuestionId;
 use CViniciusSDias\Aggregate\Domain\Question\QuestionRepository;
 use CViniciusSDias\Aggregate\Infrastructure\Persistence\Doctrine\EntityManagerFactory;
-use CViniciusSDias\Aggregate\Infrastructure\Question\InMemoryQuestionRepository;
-use CViniciusSDias\Aggregate\Infrastructure\Question\PdoQuestionRepository;
+use CViniciusSDias\Aggregate\Infrastructure\Persistence\DoctrineSession;
+use CViniciusSDias\Aggregate\Infrastructure\Persistence\PdoSession;
+use CViniciusSDias\Aggregate\Infrastructure\Domain\Question\InMemoryQuestionRepository;
+use CViniciusSDias\Aggregate\Infrastructure\Domain\Question\PdoQuestionRepository;
 use Doctrine\ORM\Tools\SchemaTool;
 
 require_once 'vendor/autoload.php';
 
-function getRepository(bool $useDoctrine = false): QuestionRepository
+function getConnection(bool $useDoctrine = false)
 {
     $dbPath = ':memory:';
+    // $dbPath = __DIR__ . '/db.sqlite';
     if (!$useDoctrine) {
         $pdo = new PDO("sqlite:$dbPath");
-        $pdo->exec('CREATE TABLE question (id TEXT PRIMARY KEY, prompt TEXT, required INTEGER);');
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->exec('CREATE TABLE IF NOT EXISTS question (id TEXT PRIMARY KEY, prompt TEXT, required INTEGER, question_type INTEGER);');
         $pdo->exec('
-            CREATE TABLE answer (
+            CREATE TABLE IF NOT EXISTS answer (
                 id TEXT PRIMARY KEY,
                 prompt TEXT,
                 question_id INTEGER,
@@ -30,26 +35,51 @@ function getRepository(bool $useDoctrine = false): QuestionRepository
             );
         ');
 
-        return new PdoQuestionRepository($pdo, new QuestionFactory());
+        return $pdo;
     }
 
     $entityManager = (new EntityManagerFactory())->createEntityManager([
         'driver' => 'pdo_sqlite',
         'path' => $dbPath,
     ]);
-    $schemaTool = new SchemaTool($entityManager);
-    $schemaTool->createSchema([
-        $entityManager->getClassMetadata(Question::class),
-        $entityManager->getClassMetadata(Answer::class),
-    ]);
-    /** @var QuestionRepository $questionRepository */
-    $questionRepository = $entityManager->getRepository(Question::class);
-    return $questionRepository;
+    try {
+        $schemaTool = new SchemaTool($entityManager);
+        $schemaTool->createSchema([
+            $entityManager->getClassMetadata(Question::class),
+            $entityManager->getClassMetadata(Answer::class),
+        ]);
+    } catch (\Throwable $e) { }
+
+    return $entityManager;
 }
 
-$repository = new InMemoryQuestionRepository(); // getRepository(true);
+function getRepository(bool $useDoctrine = false): QuestionRepository
+{
+    $conn = getConnection($useDoctrine);
+    if (!$useDoctrine) {
+        return new PdoQuestionRepository($conn, new QuestionFactory());
+    }
+
+    return $conn->getRepository(Question::class);
+}
+
+function getSession(bool $useDoctrine = false): TransactionalSession
+{
+    $conn = getConnection($useDoctrine);
+
+    if (!$useDoctrine) {
+        return new PdoSession($conn);
+    }
+
+    return new DoctrineSession($conn);
+}
+
+// $repository = new InMemoryQuestionRepository();
+$useDoctrine = true;
+$repository = getRepository($useDoctrine);
 
 $addQuestion = new AddQuestion($repository, new QuestionFactory());
+$addQuestionWithinTransaction = new TransactionalApplicationService($addQuestion, getSession($useDoctrine));
 
 $firstQuestionAddAnswerCommandList = [
     new AddAnswerCommand('First answer of first question'),
