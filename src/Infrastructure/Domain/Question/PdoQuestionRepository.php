@@ -54,6 +54,17 @@ class PdoQuestionRepository implements QuestionRepository
         return $question;
     }
 
+    public function removeOfId(QuestionId $questionId): void
+    {
+        $stm = $this->pdo->prepare('DELETE FROM answer WHERE question_id = ?');
+        $stm->bindValue(1, $questionId->id());
+        $stm->execute();
+
+        $stm = $this->pdo->prepare('DELETE FROM question WHERE id = ?');
+        $stm->bindValue(1, $questionId->id());
+        $stm->execute();
+    }
+
     public function save(Question $question): Question
     {
         if (!$this->hasWithId($question->id())) {
@@ -123,8 +134,9 @@ class PdoQuestionRepository implements QuestionRepository
 
         $idsPlaceholder = implode(',', array_fill(0, count($answerIdsToDelete), '?'));
 
-        $stm = $this->pdo->prepare("DELETE FROM answer WHERE id IN ($idsPlaceholder)");
-        $stm->execute($answerIdsToDelete);
+        $this->pdo
+            ->prepare("DELETE FROM answer WHERE id IN ($idsPlaceholder)")
+            ->execute($answerIdsToDelete);
     }
 
     private function updateExistingAnswers(Question $question): void

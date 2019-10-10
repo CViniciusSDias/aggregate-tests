@@ -32,4 +32,12 @@ class InMemoryQuestionRepository implements QuestionRepository
             ->filter(fn (Question $question) => $question->id() == $id)
             ->first();
     }
+
+    public function removeOfId(QuestionId $questionId): void
+    {
+        $question = $this->questionList
+            ->filter(fn (Question $question) => $question->id() == $questionId)
+            ->first();
+        $this->questionList->remove($this->questionList->indexOf($question));
+    }
 }

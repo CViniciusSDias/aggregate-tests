@@ -13,15 +13,18 @@ class DoctrineQuestionRepository extends EntityRepository implements QuestionRep
     public function save(Question $question): Question
     {
         $this->getEntityManager()->persist($question);
-        $this->getEntityManager()->flush();
 
         return $question;
     }
 
     public function ofId(QuestionId $id): Question
     {
-        /** @var Question $question */
-        $question = $this->find($id->id());
-        return $question;
+        return $this->find($id->id());
+    }
+
+    public function removeOfId(QuestionId $questionId): void
+    {
+        $question = $this->getEntityManager()->getReference(Question::class, $questionId->id());
+        $this->getEntityManager()->remove($question);
     }
 }
