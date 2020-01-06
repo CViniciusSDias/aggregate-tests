@@ -9,7 +9,6 @@ use Doctrine\ORM\EntityRepository;
 
 class DoctrineQuestionRepository extends EntityRepository implements QuestionRepository
 {
-
     public function save(Question $question): Question
     {
         $this->getEntityManager()->persist($question);
