@@ -23,3 +23,9 @@ So far, the following use cases are implemented:
 2. Remove question
     - When removing a question, all of its answers are also removed. You must provide:
         1. The question ID.
+
+## Delivery mechanisms
+
+Many different delivery mechanisms can be implemented using this architecture. CLI, API, Web, etc.
+
+For now, the first one I propose to implement is the web one, using the good old forms to input data.
