@@ -9,6 +9,8 @@ use CViniciusSDias\Aggregate\Infrastructure\Persistence\Doctrine\EntityManagerFa
 use DI\ContainerBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 class ContainerCreator
 {
@@ -24,6 +26,10 @@ class ContainerCreator
                     'path' => ':memory:',
                 ]),
                 QuestionRepository::class => fn (ContainerInterface $c) => $c->get(EntityManagerInterface::class)->getRepository(Question::class),
+                Environment::class => function (ContainerInterface $c) {
+                    $loader = new FilesystemLoader(__DIR__ . '/../Delivery/Web/Presentation/TwigTemplates');
+                    return new Environment($loader);
+                }
             ]);
 
             self::$container = $builder->build();

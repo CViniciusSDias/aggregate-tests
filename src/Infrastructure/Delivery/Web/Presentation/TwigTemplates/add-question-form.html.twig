@@ -1,0 +1,35 @@
+{% extends 'default-layout.html.twig' %}
+
+{% block body %}
+<h1>Add question</h1>
+
+<hr />
+
+<form method="post">
+    <div class="form-group">
+        <label for="questionType">Question type</label>
+        <select id="questionType" name="questionType" class="form-control">
+            <option value="select_one">Select One</option>
+            <option value="select_multiple">Select Multiple</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="prompt">Prompt</label>
+        <input type="text" name="prompt" id="prompt" required class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <input type="checkbox" name="required" id="required" />
+        <label for="required">Required</label>
+    </div>
+
+    <div class="form-group">
+        <label for="prompt">Answers</label>
+        <input type="text" name="answerPrompt[]" required class="form-control mb-1" />
+        <input type="text" name="answerPrompt[]" required class="form-control" />
+    </div>
+
+    <input type="submit" class="btn btn-primary">
+</form>
+{% endblock %}
