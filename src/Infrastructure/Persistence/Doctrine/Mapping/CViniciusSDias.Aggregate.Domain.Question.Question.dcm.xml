@@ -1,7 +1,7 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping">
     <entity name="CViniciusSDias\Aggregate\Domain\Question\Question"
             table="question"
-            repository-class="CViniciusSDias\Aggregate\Infrastructure\Question\DoctrineQuestionRepository"
+            repository-class="CViniciusSDias\Aggregate\Infrastructure\Domain\Question\DoctrineQuestionRepository"
             inheritance-type="SINGLE_TABLE">
         <discriminator-column name="question_type" type="integer" />
 

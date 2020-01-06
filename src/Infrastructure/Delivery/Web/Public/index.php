@@ -1,6 +1,7 @@
 <?php
 
 use CViniciusSDias\Aggregate\Infrastructure\Delivery\Web\Controller\AddQuestionFormController;
+use CViniciusSDias\Aggregate\Infrastructure\Delivery\Web\Controller\PersistQuestionController;
 use CViniciusSDias\Aggregate\Infrastructure\DI\ContainerCreator;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
@@ -10,7 +11,7 @@ require_once __DIR__ . '/../../../../../vendor/autoload.php';
 
 $routeList = [
     'GET /questions/add' => AddQuestionFormController::class,
-    'POST /questions/add' => '',
+    'POST /questions/add' => PersistQuestionController::class,
     'GET /questions/remove' => '',
 ];
 
