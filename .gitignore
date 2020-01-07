@@ -1,3 +1,4 @@
 vendor/
 .idea/
 add-question.*
+.phpunit.result.cache
