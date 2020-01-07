@@ -17,8 +17,9 @@ class PdoSession implements TransactionalSession
     {
         $this->pdo->beginTransaction();
         try {
-            $operation();
+            $return = $operation();
             $this->pdo->commit();
+            return $return;
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
             throw $e;

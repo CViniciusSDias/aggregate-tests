@@ -56,11 +56,7 @@ abstract class Question
 
     public function removeAnswerOfId(AnswerId $answerIdToRemove)
     {
-        foreach ($this->answers() as $i => $answer) {
-            if ($answer->id() == $answerIdToRemove) {
-                $this->answers->remove($i);
-            }
-        }
+        $this->answers->removeElement($this->answerOfId($answerIdToRemove));
     }
 
     public function isRequired(): bool

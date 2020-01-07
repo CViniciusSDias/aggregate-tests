@@ -13,7 +13,7 @@ class RemoveQuestion
         $this->questionRepository = $questionRepository;
     }
 
-    public function execute(RemoveQuestionCommand $command)
+    public function execute(RemoveQuestionCommand $command): void
     {
         $this->questionRepository->removeOfId($command->questionId());
     }
