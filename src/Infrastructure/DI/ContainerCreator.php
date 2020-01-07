@@ -23,7 +23,7 @@ class ContainerCreator
             $builder->addDefinitions([
                 EntityManagerInterface::class => fn () => (new EntityManagerFactory())->createEntityManager([
                     'driver' => 'pdo_sqlite',
-                    'path' => ':memory:',
+                    'path' => __DIR__ . '/../../../db.sqlite',
                 ]),
                 QuestionRepository::class => fn (ContainerInterface $c) => $c->get(EntityManagerInterface::class)->getRepository(Question::class),
                 Environment::class => function (ContainerInterface $c) {

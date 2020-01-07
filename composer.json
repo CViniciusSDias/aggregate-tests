@@ -8,7 +8,8 @@
         "nyholm/psr7-server": "^0.3.0",
         "php-di/php-di": "^6.0",
         "psr/http-server-handler": "^1.0",
-        "twig/twig": "^3.0"
+        "twig/twig": "^3.0",
+        "doctrine/migrations": "^2.2"
     },
     "autoload": {
         "psr-4": {
