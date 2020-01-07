@@ -34,6 +34,6 @@ class PersistQuestionController implements RequestHandlerInterface
         );
         $this->transaction->execute($addQuestionCommand);
 
-        return new Response(200, [], '<html><body><h1>Add question Form</h1></body></html>');
+        return new Response(302, ['Location' => '/questions/add']);
     }
 }
