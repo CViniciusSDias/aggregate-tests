@@ -37,8 +37,10 @@ This project comes with a Dockerfile, so if you don't have PHP 7.4 installed, ru
 ```shell script
 docker run --rm composer install --ignore-platform-reqs
 docker build -t php74-xdebug .
-docker run --rm -itv $(pwd):/app -w /app php74-xdebug vendor/bin/phpunit # this runs the unit tests
-docker run --rm -itv $(pwd):/app -w /app -p 8080:8080 php74-xdebug -S 0.0.0.0:8080 -t src/Infrastructure/Delivery/Web/Public/ # this starts a web server
+docker run --rm --name tembo -itv $(pwd):/app -w /app -p 8080:8080 php74-xdebug -S 0.0.0.0:8080 -t src/Infrastructure/Delivery/Web/Public/ # this starts a web server
+docker exec tembo php vendor/bin/phpunit # this runs the unit tests
+docker exec tembo php vendor/bin/doctrine-migrations migrate # this sets up the database
+docker exec tembo php vendor/bin/codecept run # this runs the acceptance tests
 ```
 
 If everything works ok, you'll be able to access on you browser: `http://0.0.0.0:8080/questions/add`

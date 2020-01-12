@@ -1,0 +1,40 @@
+# suite config
+suites:
+    acceptance:
+        actor: AcceptanceTester
+        path: .
+        modules:
+            enabled:
+                - PhpBrowser:
+                    url: 'http://0.0.0.0:8080'
+                - \Helper\Acceptance
+                - Db:
+                    dsn: 'sqlite:db.sqlite'
+                    user: ''
+                    password: ''
+                
+        # add Codeception\Step\Retry trait to AcceptanceTester to enable retries
+        step_decorators:
+            - Codeception\Step\ConditionalAssertion
+            - Codeception\Step\TryTo
+            - Codeception\Step\Retry
+                
+extensions:
+    enabled: [Codeception\Extension\RunFailed]
+
+params: 
+    - env
+
+gherkin: []    
+
+# additional paths
+paths:
+    tests: tests/E2E
+    output: tests/E2E/_output
+    data: tests/E2E/_data
+    support: tests/E2E/_support
+    envs: tests/E2E/_envs
+
+settings:
+    shuffle: false
+    lint: true
